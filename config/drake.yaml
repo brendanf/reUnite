@@ -13,5 +13,6 @@ dependencies:
   - r-stringdist=0.9.5
   - r-drake=7.8.0
   - bioconductor-biostrings=2.50
+  - bioconductor-biobase
   - r-ape=5.3
   - r-futile.logger=1.4.3

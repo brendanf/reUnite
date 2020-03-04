@@ -16,3 +16,6 @@ s/Lactarius;Lactarius sp/Russulaceae_Incertae sedis;Russulaceae/
 s/Lactarius;Lactarius subgerardii/Lactifluus;Lactifluus subgerardii/
 s/Lactarius;Lactarius vitellinus/Lactifluus;Lactifluus vitellinus/
 s/Lactarius;Lactarius cf wirrabara/Lactifluus;Lactifluus cf wirrabara/
+
+# Genus name changes from Index Fungorum
+s/Naumovia;Naumovia/Naumovozyma;Naumovozyma/

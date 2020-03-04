@@ -14,7 +14,6 @@ if (interactive()) {
   tedersoo_file <- file.path(ref_dir, "Tedersoo_Eukarya_classification.xlsx")
   tedersoo_patch_file <- file.path(ref_dir, "tedersoo.pre.sed")
   regions_file <- file.path(config_dir, "regions.csv")
-  setup_log("translate_references")
 } else if (exists("snakemake")) {
   flog.info("Creating drake plan in snakemake session...")
   r_dir <- snakemake@config$rdir
@@ -39,6 +38,8 @@ library(taxize)
 source(file.path(r_dir, "taxonomy.R"))
 source(file.path(r_dir, "parallel_helpers.R"))
 
+setup_log("translate_references")
+
 # Ranks present in the file describing the Tedersoo system.
 tedersoo_ranks <- c("kingdom", "subkingdom", "phylum", "subphylum", "class",
                     "order", "family", "genus")
@@ -54,7 +55,7 @@ dbs <- tibble::tribble(        ~db, ~header_format,
 # Which regions each DB is applicable to
 regions = readr::read_csv(regions_file, col_types = "cc") %>%
   tidyr::separate_rows(reference, sep = ", ?")
-  
+
 
 # Create names for the outputs
 db_out <- dplyr::select(regions, reference) %>%
@@ -82,7 +83,7 @@ plan <- drake_plan(
     transform = map(.data = !!dbs,
                     .id = db)
     ),
-  
+
   # the rdp training set does not have fully annotated taxonomy for nonfungi,
   # so these need to be looked up
   # find the accession numbers representing nonfungi in the RDP database
@@ -93,66 +94,66 @@ plan <- drake_plan(
     dplyr::filter(raw_header_rdp_train, !grepl("Fungi", classifications)) %$%
     accno %>%
     unique(),
-  
-  unite_prot_accno = 
+
+  unite_prot_accno =
     dplyr::filter(raw_header_unite, startsWith(classifications, "Protista")) %$%
     accno %>%
     unique(),
-  
+
   rdp_lac_accno =
     dplyr::filter(raw_header_rdp_train, grepl("Lactarius", classifications)) %$%
     accno %>%
     unique(),
-  
+
   rdp_seb_accno =
     dplyr::filter(raw_header_rdp_train, grepl("Sebacinales", classifications)) %$%
     accno %>%
     unique(),
-  
-  rdp_nf_taxdata = 
+
+  rdp_nf_taxdata =
     target(
       lookup_tax_data_fragile(rdp_nf_accno, type = "seq_id"),
       transform = split(rdp_nf_accno, slices = 50),
       retries = 1
     ),
-  
-  rdp_seb_taxdata = 
+
+  rdp_seb_taxdata =
     target(
       lookup_tax_data_fragile(rdp_seb_accno, type = "seq_id"),
       retries = 1
     ),
-  
-  rdp_lac_taxdata = 
+
+  rdp_lac_taxdata =
     target(
       lookup_tax_data_fragile(rdp_lac_accno, type = "seq_id"),
       retries = 1
     ),
-  
-  unite_prot_taxdata = 
+
+  unite_prot_taxdata =
     target(
       lookup_tax_data_fragile(unite_prot_accno, type = "seq_id"),
       transform = split(unite_prot_accno, slices = 15),
       retries = 1
     ),
-  
+
   rdp_nf_ncbiheader =
     target(
       purrr::map_dfr(list(rdp_nf_taxdata),
                      accno_c12n_table),
       transform = combine(rdp_nf_taxdata)
     ),
-  
+
   rdp_seb_ncbiheader = accno_c12n_table(rdp_seb_taxdata),
-  
+
   rdp_lac_ncbiheader = accno_c12n_table(rdp_lac_taxdata),
-  
+
   unite_prot_ncbiheader =
     target(
       purrr::map_dfr(list(unite_prot_taxdata),
                      accno_c12n_table),
       transform = combine(unite_prot_taxdata)
     ),
-  
+
   rdp_nf_taxa =
     target(
       list(rdp_nf_taxdata) %>%
@@ -160,11 +161,11 @@ plan <- drake_plan(
         unique(),
       transform = combine(rdp_nf_taxdata)
     ),
-  
+
   rdp_seb_taxa = rdp_seb_taxdata$data$tax_data,
-  
+
   rdp_lac_taxa = rdp_lac_taxdata$data$tax_data,
-  
+
   unite_prot_taxa =
     target(
       list(unite_prot_taxdata) %>%
@@ -172,11 +173,11 @@ plan <- drake_plan(
         unique(),
       transform = combine(unite_prot_taxdata)
     ),
-  
+
   # Parse Tedersoo's classification
   tedersoo_class =
     read_classification_tedersoo(file_in(tedersoo_file), file_in(tedersoo_patch_file)),
-  
+
   # Remove taxa at unnecessary ranks.
   rdp_nf_reduced =
     target(
@@ -188,7 +189,7 @@ plan <- drake_plan(
         keytaxa = unique(tedersoo_class$taxon_names)
       )
     ),
-  
+
   rdp_seb_reduced =
     reduce_ncbi_taxonomy(
       rdp_seb_ncbiheader,
@@ -197,7 +198,7 @@ plan <- drake_plan(
                 "family", "genus"),
       keytaxa = unique(tedersoo_class$taxon_names)
     ),
-  
+
   rdp_lac_reduced =
     reduce_ncbi_taxonomy(
       rdp_lac_ncbiheader,
@@ -206,7 +207,7 @@ plan <- drake_plan(
                 "family", "genus"),
       keytaxa = unique(tedersoo_class$taxon_names)
     ),
-  
+
   unite_prot_reduced =
     reduce_ncbi_taxonomy(
       unite_prot_ncbiheader,
@@ -221,11 +222,11 @@ plan <- drake_plan(
       "Bacillariophyta",
       "Stramenopiles;Bacillariophyceae"
     ),
-  
+
   # Combine the classifications from the taxa that we looked up from NCBI
   # with the original ones from the files.
   reduced_header_rdp_train = target(
-    raw_header_rdp_train %>%
+    raw_header %>%
       dplyr::filter(!duplicated(accno)) %>%
       dplyr::left_join(
         dplyr::select(rdp_nf_reduced, accno, c_nf = classifications),
@@ -245,11 +246,11 @@ plan <- drake_plan(
           reduce_taxonomy()
       ) %>%
       dplyr::select(-c_lac, -c_seb, -c_nf),
-    transform = map(db = "rdp_train", .tag_out = reduced_header, .id = FALSE)
+    transform = map(raw_header = raw_header_rdp_train, db = "rdp_train", .tag_out = reduced_header, .id = FALSE)
   ),
-  
+
   reduced_header_unite = target(
-    raw_header_unite %>%
+    raw_header %>%
       dplyr::filter(!duplicated(accno)) %>%
       dplyr::left_join(
         dplyr::select(unite_prot_reduced, accno, c_prot = classifications),
@@ -261,18 +262,18 @@ plan <- drake_plan(
           reduce_taxonomy()
       ) %>%
       dplyr::select(-c_prot),
-    transform = map(db = "unite", .tag_out = reduced_header, .id = FALSE)
+    transform = map(raw_header = raw_header_unite, db = "unite", .tag_out = reduced_header, .id = FALSE)
   ),
-  
+
   reduced_header_warcup = target(
-    raw_header_warcup %>%
+    raw_header %>%
       dplyr::filter(!duplicated(accno)) %>%
       dplyr::mutate(
         classifications = reduce_taxonomy(classifications)
       ),
-    transform = map(db = "warcup", .tag_out = reduced_header, .id = FALSE)
+    transform = map(raw_header = raw_header_warcup, db = "warcup", .tag_out = reduced_header, .id = FALSE)
   ),
-  
+
   # parse classification from the headers
   class = target(
     reduced_header$classifications %>%
@@ -281,7 +282,7 @@ plan <- drake_plan(
       taxa::get_data_frame(c("taxon_names", "classifications")),
     transform = map(reduced_header, .id = db)
   ),
-  
+
   # translate taxonomy to Tedersoo's system.
   new_header = target(
     translate_taxonomy(reduced_header,
@@ -291,7 +292,7 @@ plan <- drake_plan(
                      rank_in = tedersoo_ranks),
     transform = map(class, .id = db)
   ),
-  
+
   # Output files in formats suitable for SINTAX and DADA2.
   write = target(
     replace_header(file_in(fasta_in), file_out(fasta_out), new_header,
@@ -299,6 +300,69 @@ plan <- drake_plan(
                    patch_file = file_in(patch_file)),
     transform = map(.data = !!db_out,
                       .id = c(db, region, method))
+  ),
+
+  changes = target(
+    dplyr::left_join(
+      raw_header,
+      new_header,
+      by = c("index", "accno"),
+      suffix = c(".old", ".new")
+    ) %>%
+      dplyr::mutate(
+        classifications.old = sub(
+          classifications.old,
+          pattern = "^([^;]+;)([^;]+;)([^;]+;)([^;]+;)([^;]+;)([^;]+;)([^;]+;)([^;]+)(;[^;]*)?$",
+          replacement = "\\1\\2\\4\\6\\7\\8"
+        ) %>%
+          sub(
+            pattern = "^(([^;]+;){5}[^;]+);.*$",
+            replacement = "\\1"
+          ) %>%
+          gsub(
+            pattern = "_(phy|cls|ord|fam)_",
+            replacement = ""
+          ) %>%
+          chartr(old = " ", new = "_") %>%
+          gsub(
+            pattern = "_incertae",
+            replacement = "_Incertae"
+          )
+      ) %>%
+      dplyr::filter(classifications.old != classifications.new) %>%
+      dplyr::mutate(
+        suffix = purrr::map2_chr(
+          classifications.old,
+          classifications.new,
+          ~ Biobase::lcSuffix(c(.x, .y))
+        ) %>%
+          sub("^(([^A-Z;][^;]*)?;)?[A-Z][^;]+", "", .) %>%
+          ifelse(grepl(";", .), ., "")
+      ) %>%
+      dplyr::mutate(
+        classifications.old = ifelse(
+          nchar(suffix) > 0,
+          stringi::stri_replace_last_fixed(
+            classifications.old,
+            suffix,
+            ""
+          ),
+          classifications.old
+        ),
+        classifications.new = ifelse(
+          nchar(suffix) > 0,
+          stringi::stri_replace_last_fixed(
+            classifications.new,
+            suffix,
+            ""
+          ),
+          classifications.new
+        )
+      ) %>%
+      dplyr::group_by(classifications.old, classifications.new) %>%
+      dplyr::summarize(accnos = paste(accno, collapse = ",")) %>%
+      readr::write_tsv(file_out(!!file.path(out_dir, paste0(db, ".changes")))),
+    transform = map(raw_header, new_header, db, .id = db)
   ),
   trace = TRUE
 )
