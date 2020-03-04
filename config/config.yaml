@@ -1,0 +1,33 @@
+rdir:     'scripts'
+refdir:   'reference'
+condadir: 'config'
+outdir:   'output'
+logdir:   'logs'
+
+regions_file: 'config/regions.csv'
+
+unite_url: 'https://files.plutof.ut.ee/doi/C2/20/C22034350E32D6AD7E5D1AF3F8BC487E34DA0BE25602B0E748906005CE6ADA97.zip'
+unite_md5: '48dc30d6eff9b7144583701eb56a0a8c'
+unite_filename: 'sh_general_release_dynamic_s_all_02.02.2019.fasta'
+unite_idtaxa_url: 'http://www2.decipher.codes/Classification/TrainingSets/UNITE_v2019_July2019.RData'
+unite_idtaxa_md5: 'e6380c90ecf13b3e0b19eb3709c436d0'
+
+rdp_url: 'https://sourceforge.net/projects/rdp-classifier/files/RDP_Classifier_TrainingData/RDPClassifier_fungiLSU_trainsetNo11_rawtrainingdata.zip'
+rdp_md5: '9c0b73640061f4e15374d7c955d7a790'
+rdp_filename: 'RDPClassifier_fungiLSU_trainsetNo11_rawtrainingdata/fungiLSU_train_012014.fa'
+rdp_taxa: 'RDPClassifier_fungiLSU_trainsetNo11_rawtrainingdata/fungiLSU_taxid_012014.txt'
+rdp_idtaxa_url: 'http://www2.decipher.codes/Classification/TrainingSets/Fungal_LSU_v11_March2018.RData'
+rdp_idtaxa_md5: '8d6d001d1b7541cdfc098a440ea8c218'
+
+warcup_url: 'https://sourceforge.net/projects/rdp-classifier/files/RDP_Classifier_TrainingData/fungalits_warcup_trainingdata_V2.zip'
+warcup_md5: 'd6fb59a81aa885937054abc334fb60d2'
+warcup_filename: 'fungalits_warcup_trainingdata_V2/Warcup_v2.fasta'
+warcup_taxa: 'fungalits_warcup_trainingdata_V2/Warcup_v2_RDP_Taxonomy.txt'
+warcup_idtaxa_url: 'http://www2.decipher.codes/Classification/TrainingSets/Warcup_v2_March2018.RData'
+warcup_idtaxa_md5: 'b4764f0ff5e865841f8899ae5ef382a0'
+
+tedersoo_url: 'https://files.plutof.ut.ee/doi/9B/D1/9BD15803C666B4B67BDF20DE0C6002CAEE04BE58EB744003CE4EB8AAED26C1C5.xlsx'
+tedersoo_md5: '8993c02e333ced1d1a9e9d724338da1d'
+tedersoo_patch: 'reference/tedersoo.pre.sed'
+
+genbank_accno2tax_url: 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz'

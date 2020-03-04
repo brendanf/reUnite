@@ -1,0 +1,17 @@
+name: drake
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base=3.5.1
+  - r-tidyverse=1.2.1
+  - r-here=0.1
+  - r-seqinr=3.6_1
+  - r-taxa=0.3.3
+  - r-taxize=0.9.91
+  - r-stringdist=0.9.5
+  - r-drake=7.8.0
+  - bioconductor-biostrings=2.50
+  - r-ape=5.3
+  - r-futile.logger=1.4.3

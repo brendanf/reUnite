@@ -1,0 +1,8 @@
+sourceforge.net
+files.plutof.ut.ee
+ENTREZ_KEY
+.drake
+.snakemake
+logs
+reference/*.fasta.gz
+reference/Tedersoo_Eukarya_classification.xlsx
