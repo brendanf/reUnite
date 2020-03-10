@@ -19,3 +19,7 @@ s/Lactarius;Lactarius cf wirrabara/Lactifluus;Lactifluus cf wirrabara/
 
 # Genus name changes from Index Fungorum
 s/Naumovia;Naumovia/Naumovozyma;Naumovozyma/
+s/Eupenicillium/Penicillium/g
+s/Bionectria/Clonostachys/g
+s/Botryosphaeria;([A-Z][a-z]+)/\1;\1/
+

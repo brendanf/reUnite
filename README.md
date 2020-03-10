@@ -14,6 +14,7 @@ The groups for which this is done in the current version is:
  - *Sebacina* (RDP)
 
 Some additional changes are made by hand using the `reference/*.pre.sed` files.
+These include a few updates to Tedersoo's taxonomy.
 
 Lists of all changed taxonomy for each database are found in `output/*.changes`.
 

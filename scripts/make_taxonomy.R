@@ -176,7 +176,7 @@ plan <- drake_plan(
 
   # Parse Tedersoo's classification
   tedersoo_class =
-    read_classification_tedersoo(file_in(tedersoo_file), file_in(tedersoo_patch_file)),
+    read_classification_tedersoo(file_in(!!tedersoo_file), file_in(!!tedersoo_patch_file)),
 
   # Remove taxa at unnecessary ranks.
   rdp_nf_reduced =

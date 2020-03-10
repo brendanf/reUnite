@@ -73,3 +73,6 @@ s/Eukaryota incertae sedis;Stramenopiles;Bacillariophyta/Stramenopila;Ochrophyta
 s/Bacillariophyta/Bacillariophyceae/g
 s/Eukaryota incertae sedis;Stramenopiles;Chrysophyceae/Stramenopila;Ochrophyta;Chrysophyceae/
 s/Eukaryota incertae sedis;Stramenopiles;Dictyochophyceae/Stramenopila;Ochrophyta;Dictyochophyceae/
+
+# Not a taxon
+s/Spizellomycetales incertae sedis;Spizellomycete/Spizellomycetales incertae sedis;Spizellomycetales incertae sedis/
