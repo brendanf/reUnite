@@ -6,9 +6,14 @@ logdir:   'logs'
 
 regions_file: 'config/regions.csv'
 
-unite_url: 'https://files.plutof.ut.ee/doi/C2/20/C22034350E32D6AD7E5D1AF3F8BC487E34DA0BE25602B0E748906005CE6ADA97.zip'
-unite_md5: '48dc30d6eff9b7144583701eb56a0a8c'
-unite_filename: 'sh_general_release_dynamic_s_all_02.02.2019.fasta'
+unite_single_url: 'https://files.plutof.ut.ee/public/orig/1D/B9/1DB95C8AC0A80108BECAF1162D761A8D379AF43E2A4295A3EF353DD1632B645B.gz'
+unite_single_md5: '9d41e1212beec5eea320c99911qls f4217f'
+unite_single_filename: 'sh_general_release_s_all_04.02.2020/sh_general_release_dynamic_s_all_04.02.2020.fasta'
+unite_nosingle_url: 'https://files.plutof.ut.ee/public/orig/F9/ED/F9EDE36E5209F469056675EBD672425BC06EACB7FE0C0D18F5A13E4CA632DCFA.gz'
+unite_nosingle_md5: '9de96415dee5c5f0041b07d382e6743f'
+unite_nosingle_filename: 'sh_general_release_all_04.02.2020/sh_general_release_dynamic_all_04.02.2020.fasta'
+unite_insd_url: 'https://files.plutof.ut.ee/public/orig/BF/49/BF49FBF4B47314A1CC5238B280FC58BFB8CEBD44A8D45F4A2BF5B8A466715693.gz'
+unite_insd_md5: 'd4ea322815f41e06a69df2beeadddfa3'
 unite_idtaxa_url: 'http://www2.decipher.codes/Classification/TrainingSets/UNITE_v2019_July2019.RData'
 unite_idtaxa_md5: 'e6380c90ecf13b3e0b19eb3709c436d0'
 
@@ -18,6 +23,16 @@ rdp_filename: 'RDPClassifier_fungiLSU_trainsetNo11_rawtrainingdata/fungiLSU_trai
 rdp_taxa: 'RDPClassifier_fungiLSU_trainsetNo11_rawtrainingdata/fungiLSU_taxid_012014.txt'
 rdp_idtaxa_url: 'http://www2.decipher.codes/Classification/TrainingSets/Fungal_LSU_v11_March2018.RData'
 rdp_idtaxa_md5: '8d6d001d1b7541cdfc098a440ea8c218'
+
+rdp_full_url: 'https://rdp.cme.msu.edu/download/current_Fungi_unaligned.fa.gz'
+rdp_full_md5: 'c620d6f9041d7c6916657be1ae0402ff'
+
+silva_parc_url: 'https://www.arb-silva.de/fileadmin/silva_databases/release_138.1/Exports/SILVA_138.1_LSUParc_tax_silva_trunc.fasta.gz'
+silva_parc_md5: '626d9d94661730bac0717f3e3e838b09'
+silva_ref_url: 'https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/SILVA_138.1_LSURef_tax_silva_trunc.fasta.gz'
+silva_ref_md5: '7bcbf0e0e131ac66293e469b34f64da8'
+silva_ref99_url: 'https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/SILVA_138.1_LSURef_NR99_tax_silva_trunc.fasta.gz'
+silva_ref99_md5: '7eab5ef858cd0ef51e59d0550f4123da'
 
 warcup_url: 'https://sourceforge.net/projects/rdp-classifier/files/RDP_Classifier_TrainingData/fungalits_warcup_trainingdata_V2.zip'
 warcup_md5: 'd6fb59a81aa885937054abc334fb60d2'

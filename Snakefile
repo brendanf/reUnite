@@ -50,20 +50,49 @@ rule translate_references:
   log: "{logdir}/translate_references.log".format_map(config)
   script: "{rdir}/make_taxonomy.R".format_map(config)    
 
-# Download the Unite database
+# Download the Unite database, without global and 97% singletons
 localrules: unite_download
 rule unite_download:
-    output: "{refdir}/unite.fasta.gz".format_map(config)
+    output: "{refdir}/unite_nosingle.fasta.gz".format_map(config)
     input:
-      zip = HTTP.remote(config['unite_url'], allow_redirects = True, keep_local = True)
+      zip = HTTP.remote(config['unite_nosingle_url'], allow_redirects = True, keep_local = False)
     shadow: "shallow"
     shell:
         """
-        echo {config[unite_md5]} {input} |
+        echo {config[unite_nosingle_md5]} {input} |
         md5sum -c - &&
         mkdir -p $(dirname {output}) &&
-        unzip {input} &&
-        gzip -c {config[unite_filename]} > {output}
+        tar -xzf {input} &&
+        gzip -c9 {config[unite_nosingle_filename]} > {output}
+        """
+
+# Download the Unite database, including global and 97% singletons
+localrules: unite_single_download
+rule unite_single_download:
+    output: "{refdir}/unite_single.fasta.gz".format_map(config)
+    input:
+      zip = HTTP.remote(config['unite_single_url'], allow_redirects = True, keep_local = False)
+    shadow: "shallow"
+    shell:
+        """
+        echo {config[unite_single_md5]} {input} |
+        md5sum -c - &&
+        mkdir -p $(dirname {output}) &&
+        tar -xzf {input} &&
+        gzip -c9 {config[unite_single_filename]} > {output}
+        """
+
+# Download the Unite+INSD database
+localrules: unite_insd_download
+rule unite_insd_download:
+    output: "{refdir}/unite_insd.fasta.gz".format_map(config)
+    input: HTTP.remote(config['unite_insd_url'], allow_redirects = True, keep_local = False)
+    shadow: "shallow"
+    shell:
+        """
+        echo {config[unite_single_md5]} {input} | md5sum -c -
+        mkdir -p $(dirname {output})
+        mv {input} {output}
         """
 
 # Download the RDP fungal LSU training set
@@ -83,8 +112,27 @@ rule rdp_download:
         mkdir -p $(dirname {output.fasta}) &&
         unzip {input.zip} &&
         sed '/^>/!y/uU/tT/' <{config[rdp_filename]} |
-        gzip -c > {output.fasta} &&
+        gzip -c9 > {output.fasta} &&
         mv {config[rdp_taxa]} {output.taxa}
+        """
+
+# Download the RDP fungal LSU database
+# This will also convert all sequences from RNA (Uu) to DNA (Tt)
+localrules: rdp_full_download
+rule rdp_full_download:
+    output:
+        fasta = "{refdir}/rdp_28S.fasta.gz".format_map(config)
+    input:
+        fasta = HTTP.remote(config['rdp_full_url'], allow_redirects = True, keep_local = True)
+    shadow: "shallow"
+    shell:
+        """
+        echo {config[rdp_full_md5]} {input.fasta} |
+        md5sum -c - &&
+        mkdir -p $(dirname {output.fasta}) &&
+        zcat {input.fasta} |
+        sed '/^>/!y/uU/tT/' |
+        gzip -c >{output.fasta}
         """
 
 # Download the Warcup fungal ITS training set
