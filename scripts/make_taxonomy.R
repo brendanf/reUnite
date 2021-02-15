@@ -48,7 +48,8 @@ tedersoo_ranks <- c("kingdom", "subkingdom", "phylum", "subphylum", "class",
 dbs <- tibble::tribble(        ~db, ~header_format,
                        "rdp_train",          "rdp",
                           "warcup",          "rdp",
-                           "unite",        "unite") %>%
+                           "unite",        "unite",
+                           "silva",        "silva") %>%
   dplyr::mutate(header_file = file.path("reference", paste0(db, ".fasta.gz")),
                 patch_file = file.path("reference", paste0(db, ".pre.sed")))
 
@@ -272,6 +273,15 @@ plan <- drake_plan(
         classifications = reduce_taxonomy(classifications)
       ),
     transform = map(raw_header = raw_header_warcup, db = "warcup", .tag_out = reduced_header, .id = FALSE)
+  ),
+
+  reduced_header_silva = target(
+      raw_header %>%
+          dplyr::filter(!duplicated(accno)) %>%
+          dplyr::mutate(
+              classifications = reduce_taxonomy(classifications)
+          ),
+      transform = map(raw_header = raw_header_silva, db = "silva", .tag_out = reduced_header, .id = FALSE)
   ),
 
   # parse classification from the headers

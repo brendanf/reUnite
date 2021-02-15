@@ -31,13 +31,13 @@ rule translate_references:
                method = ['sintax', 'dada2']),
         expand("{outdir}/{db}.{region}.{method}.fasta.gz",
                outdir = config['outdir'],
-               db = ['rdp_train'],
+               db = ['rdp_train', 'silva'],
                region = ['LSU'],
                method = ['sintax', 'dada2'])
   input:
     expand("{refdir}/{dbname}.{type}",
            refdir = config['refdir'],
-           dbname = ['rdp_train', 'warcup', 'unite'],
+           dbname = ['rdp_train', 'warcup', 'unite', 'silva'],
            type = ['fasta.gz', 'pre.sed']),
     "{rdir}/taxonomy.R".format_map(config),
     regions = config["regions_file"],
@@ -152,6 +152,28 @@ rule warcup_download:
         unzip {input} &&
         gzip -c {config[warcup_filename]} > {output.fasta} &&
         mv {config[warcup_taxa]} {output.taxa}
+        """
+
+# Download SILVA LSURef NR99
+# also extract Eukaryotes only, and transcribe RNA to DNA
+rule silva_download:
+    output:
+        fasta = "{refdir}/silva.fasta.gz".format_map(config)
+    input:
+        HTTP.remote(config['silva_ref99_url'], allow_redirects = True, keep_local = True)
+    shadow: "shallow"
+    conda: "config/vsearch.yaml"
+    shell:
+        """
+        echo {config[silva_ref99_md5]} {input} |
+        md5sum -c - &&
+        mkdir -p $(dirname {output.fasta}) &&
+        zcat {input} |
+        tr ' ' '$' |
+        vsearch --fastx_getseqs - --label_word Eukaryota --fastaout - |
+        tr '$' ' ' |
+        sed '/^>/!y/Uu/Tt/' |
+        gzip -c >{output.fasta}
         """
 
 # Download Eukarya classification system proposed by Tedersoo

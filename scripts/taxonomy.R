@@ -2,6 +2,7 @@ read_header <- function(header_file, patch_file, format) {
   switch(format,
     rdp = read_header_rdp(header_file, patch_file),
     unite = read_header_unite(header_file, patch_file),
+    silva = read_header_silva(header_file, patch_file),
     stop("unknown reference database format: ", format)
   )
 }
@@ -41,6 +42,28 @@ read_header_unite <- function(header_file, patch_file) {
                      ";unidentified", "")
 }
 
+read_header_silva <- function(header_file, patch_file) {
+    header_file <- if (is.character(header_file)) {
+        Biostrings::readDNAStringSet(header_file)
+    } else {
+        header_file
+    }
+    header_file <- names(header_file)
+
+    header_file %>%
+        patch_taxonomy(patch_file) %>%
+        tibble::tibble(header = .) %>%
+        tidyr::extract(
+            col = header,
+            into = c("accno", "classifications"),
+            regex = "([^.]+)\\.[0-9]+\\.[0-9]+ +(.+)"
+        ) %>%
+        dplyr::mutate(
+            classifications = classifications %>%
+                stringr::str_remove_all(";[^;]*(uncultured|unknown|unidentified|[Ii]ncertae[_ ][Ss]edis)[^;]*"),
+            index = seq.int(dplyr::n())
+        )
+}
 replace_header <- function(in_fasta, out_fasta, new_header,
                            in_format, out_format, 
                            patch_file) {
