@@ -185,10 +185,14 @@ reduce_taxonomy <- function(taxonomy) {
     stringr::str_replace_all("([A-Z]+[a-z0-9]+)(;\\1)+(;|$)", "\\1\\3")
 }
 
-translate_taxonomy <- function(taxonomy, c12n, reference) {
-  c12n <- c12n %>%
-    dplyr::mutate(n_supertaxa = stringr::str_count(classifications, ";")) %>%
-    dplyr::group_split(n_supertaxa)
+translate_taxonomy <- function(taxonomy, c12n, reference, change_file) {
+    if (!dir.exists(dirname(change_file))) dir.create(dirname(change_file))
+    change_file <- file(change_file, open = "wt")
+    on.exit(close(change_file))
+
+    c12n <- c12n %>%
+        dplyr::mutate(n_supertaxa = stringr::str_count(classifications, ";")) %>%
+        dplyr::group_split(n_supertaxa)
   
   for (i in seq_along(c12n)) {
     flog.info("Translating %i taxa at level %i.", nrow(c12n[[i]]), i)
@@ -207,14 +211,39 @@ translate_taxonomy <- function(taxonomy, c12n, reference) {
                     q = 5
                 )
             ) %>%
-      dplyr::arrange(dist, .by_group = TRUE) %>%
-      dplyr::summarize(classifications_ref = dplyr::first(classifications_ref)) %>%
-      dplyr::mutate_at("classifications_src", paste0, "(;|$)") %>%
-      dplyr::mutate_at("classifications_ref", paste0, "$1")
-    if (nrow(replacements)) {
-      taxonomy$classifications <-
-        stringi::stri_replace_all_regex(taxonomy$classifications,
-                                        replacements$classifications_src,
+            dplyr::arrange(dist, .by_group = TRUE) %>%
+            dplyr::summarize(classifications_ref = dplyr::first(classifications_ref)) %>%
+            dplyr::mutate(
+                prefix = purrr::map2(
+                    classifications_src,
+                    classifications_ref,
+                    ~Biobase::lcPrefix(c(.x, .y))
+                ) %>%
+                    stringr::str_remove("[^;]+$") %>%
+                    ifelse(. == "", "(root)", .),
+                classout_src = stringr::str_remove(
+                    classifications_src,
+                    paste0("^", prefix)
+                ),
+                classout_ref = stringr::str_remove(
+                    classifications_ref,
+                    paste0("^", prefix)
+                )
+            ) %>%
+            dplyr::mutate_at(
+                c("prefix", "classout_src", "classout_ref"),
+                stringr::str_remove_all,
+                pattern = "[^;]+[iI]ncertae[ _][Ss]edis;"
+            ) %>%
+            dplyr::mutate_at("classifications_src", paste0, "(;|$)") %>%
+            dplyr::mutate_at("classifications_ref", paste0, "$1")
+        if (nrow(replacements)) {
+            dplyr::filter(replacements, classout_src != classout_ref) %>%
+                glue::glue_data("{prefix} : {classout_src} -> {classout_ref}") %>%
+                writeLines(con = change_file)
+            taxonomy$classifications <-
+                stringi::stri_replace_all_regex(taxonomy$classifications,
+                                                replacements$classifications_src,
                                         replacements$classifications_ref,
                                         vectorize_all = FALSE)
       for (j in seq_along(c12n)) {

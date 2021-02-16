@@ -297,7 +297,8 @@ plan <- drake_plan(
   new_header = target(
     translate_taxonomy(reduced_header,
                        class,
-                       tedersoo_class) %>%
+                       tedersoo_class,
+                       file_out(!!file.path(out_dir, paste0(db, ".changes2")))) %>%
     dplyr::mutate_at("classifications", regularize_taxonomy,
                      rank_in = tedersoo_ranks),
     transform = map(class, .id = db)
