@@ -199,8 +199,14 @@ translate_taxonomy <- function(taxonomy, c12n, reference) {
       dplyr::group_by(classifications_src) %>%
       dplyr::mutate(mismatch = all(classifications_src != classifications_ref)) %>%
       dplyr::filter(mismatch) %>%
-      dplyr::mutate(dist = stringdist::stringdist(classifications_src,
-                                                  classifications_ref)) %>%
+            dplyr::mutate(
+                dist = stringdist::stringdist(
+                    classifications_src,
+                    classifications_ref,
+                    method = "jaccard",
+                    q = 5
+                )
+            ) %>%
       dplyr::arrange(dist, .by_group = TRUE) %>%
       dplyr::summarize(classifications_ref = dplyr::first(classifications_ref)) %>%
       dplyr::mutate_at("classifications_src", paste0, "(;|$)") %>%
