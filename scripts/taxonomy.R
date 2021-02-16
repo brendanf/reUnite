@@ -1,3 +1,19 @@
+#' Parse taxonomy from FASTA headers in different formats.
+#'
+#' @param header_file (`character` string or anything with `names()`) either the
+#'     path of a FASTA file to extract the headers from, or an object
+#'     representing the FASTA file, where `names()` returns the headers (for
+#'     instance a named character vector or a `Biostrings::DNAStringSet`)
+#' @param patch_file (`character` string) path to a file which will be used to
+#'     patch the taxonomy in the headers using `patch_header()`
+#' @param format (`character` string) which header format to read.
+#'     Supported values are `"rdp"`, `"unite"`, and `"silva"`.
+#'
+#' @return a `tibble` with columns "index" (`integer`), "accno" (`character`),
+#'     and "classifications" (`character`)
+#' @export
+#'
+#' @examples
 read_header <- function(header_file, patch_file, format) {
   switch(format,
     rdp = read_header_rdp(header_file, patch_file),
@@ -7,9 +23,11 @@ read_header <- function(header_file, patch_file, format) {
   )
 }
 
+# parse taxonomy from RDP-style FASTA headers
+# >(accession number)   Root;(kingdom);(phylum);(class);(order);(family);(genus);(species?)
 read_header_rdp <- function(header_file, patch_file) {
   header_file <- if (is.character(header_file)) {
-    Biostrings::readDNAStringSet(header_file) 
+    Biostrings::readDNAStringSet(header_file)
   } else {
     header_file
   }
@@ -22,9 +40,11 @@ read_header_rdp <- function(header_file, patch_file) {
                     classifications = .[,4])}
 }
 
+# parse taxonomy from Unite-style FASTA headers
+# >(name)|(accno)|(species hypothesis)|(category)|k__(kingdom);p__(phylum);c__(class);o__(order);f__(family);g__(genus);s__(species)
 read_header_unite <- function(header_file, patch_file) {
   header_file <- if (is.character(header_file)) {
-    Biostrings::readDNAStringSet(header_file) 
+    Biostrings::readDNAStringSet(header_file)
   } else {
     header_file
   }
@@ -42,6 +62,8 @@ read_header_unite <- function(header_file, patch_file) {
                      ";unidentified", "")
 }
 
+# parse taxonomy from Silva-style FASTA header
+# > (accno).(start).(end) (Domain);(rest);(of);(taxonomy);(with);(variable);(number);(of);(ranks)
 read_header_silva <- function(header_file, patch_file) {
     header_file <- if (is.character(header_file)) {
         Biostrings::readDNAStringSet(header_file)
@@ -64,8 +86,46 @@ read_header_silva <- function(header_file, patch_file) {
             index = seq.int(dplyr::n())
         )
 }
+
+
+
+write_taxonomy <- function(taxonomy, fasta, outfile, format) {
+    switch(format,
+           dada2 = write_taxonomy_dada2(taxonomy, fasta, outfile),
+           sintax = write_taxonomy_sintax(taxonomy, fasta, outfile),
+           stop("unknown taxonomy format: ", format)
+    )
+}
+
+write_taxonomy_dada2 <- function(taxonomy, fasta, outfile) {
+    if (is.character(fasta)) {
+        fasta <- Biostrings::readDNAStringSet(fasta)
+    }
+    fasta <- fasta[!is.na(taxonomy$classifications)]
+
+    taxonomy %>%
+        dplyr::filter(!is.na(classifications)) %$%
+        set_names(fasta, classifications) %>%
+        Biostrings::writeXStringSet(outfile, compress = endsWith(outfile, ".gz"))
+}
+
+write_taxonomy_sintax <- function(taxonomy, fasta, outfile) {
+    if (is.character(fasta)) {
+        fasta <- Biostrings::readDNAStringSet(fasta)
+    }
+    fasta <- fasta[!is.na(taxonomy$classifications)]
+
+    taxonomy %>%
+        dplyr::filter(!is.na(classifications)) %>%
+        dplyr::mutate_at("classifications", stringr::str_replace,
+                         "([^;]+);([^;]+);([^;]+);([^;]+);([^;]+);([^;]+)",
+                         "tax=k:\\1,p:\\2,c:\\3,o:\\4,f:\\5,g:\\6") %$%
+        set_names(fasta, classifications) %>%
+        Biostrings::writeXStringSet(outfile, compress = endsWith(outfile, ".gz"))
+}
+
 replace_header <- function(in_fasta, out_fasta, new_header,
-                           in_format, out_format, 
+                           in_format, out_format,
                            patch_file) {
   fasta <- Biostrings::readDNAStringSet(in_fasta)
   old_header <- read_header(fasta, patch_file, in_format)
@@ -274,41 +334,6 @@ regularize_taxonomy <- function(taxonomy, rank_in,
                       "(unidentified_)+",
                       "unidentified_") %>%
     purrr::pmap_chr(paste, sep = ";")
-}
-
-write_taxonomy <- function(taxonomy, fasta, outfile, format) {
-  switch(format,
-    dada2 = write_taxonomy_dada2(taxonomy, fasta, outfile),
-    sintax = write_taxonomy_sintax(taxonomy, fasta, outfile),
-    stop("unknown taxonomy format: ", format)
-  )
-}
-
-write_taxonomy_dada2 <- function(taxonomy, fasta, outfile) {
-  if (is.character(fasta)) {
-    fasta <- Biostrings::readDNAStringSet(fasta)
-  }
-  fasta <- fasta[!is.na(taxonomy$classifications)]
-  
-  taxonomy %>%
-    dplyr::filter(!is.na(classifications)) %$%
-    set_names(fasta, classifications) %>%
-    Biostrings::writeXStringSet(outfile, compress = endsWith(outfile, ".gz"))
-}
-
-write_taxonomy_sintax <- function(taxonomy, fasta, outfile) {
-  if (is.character(fasta)) {
-    fasta <- Biostrings::readDNAStringSet(fasta)
-  }
-  fasta <- fasta[!is.na(taxonomy$classifications)]
-  
-  taxonomy %>%
-    dplyr::filter(!is.na(classifications)) %>%
-    dplyr::mutate_at("classifications", stringr::str_replace,
-                     "([^;]+);([^;]+);([^;]+);([^;]+);([^;]+);([^;]+)",
-                     "tax=k:\\1,p:\\2,c:\\3,o:\\4,f:\\5,g:\\6") %$%
-    set_names(fasta, classifications) %>%
-    Biostrings::writeXStringSet(outfile, compress = endsWith(outfile, ".gz"))
 }
 
 read_classification_tedersoo <- function(file, patch_file = NULL) {
