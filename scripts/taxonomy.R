@@ -132,15 +132,15 @@ replace_header <- function(in_fasta, out_fasta, new_header,
   assertthat::assert_that(all(old_header$accno %in% new_header$accno))
   new_header <- dplyr::select(old_header, accno) %>%
     dplyr::left_join(new_header, by = "accno")
-  
+
   bad_classifications <- is.na(new_header$classifications) |
     startsWith(new_header$classifications, "Eukaryota") |
     startsWith(new_header$classifications, "Chromista") |
     startsWith(new_header$classifications, "Protista")
-  
+
   fasta <- fasta[!bad_classifications]
   new_header <- new_header[!bad_classifications,]
-  
+
   write_taxonomy(taxonomy = new_header, fasta = fasta, outfile = out_fasta,
                  format = out_format)
 }
@@ -152,17 +152,24 @@ lookup_tax_data_fragile <- function(...) {
   )
 }
 
-
-accno_c12n_table <- function(tax_data) {
-  dplyr::left_join(tibble::tibble(accno = tax_data$data$query_data,
-                                  taxon_ids = names(tax_data$data$query_data)),
-                   tax_data$get_data_frame(c("taxon_ids", "classifications")),
-                   by = "taxon_ids")
+accno_c12n_table <- function(tax_data, patch_file = NULL) {
+    dplyr::left_join(
+        tibble::tibble(
+            accno = tax_data$data$query_data,
+            taxon_ids = names(tax_data$data$query_data)
+        ),
+        tax_data$get_data_frame(c("taxon_ids", "classifications")),
+        by = "taxon_ids"
+    ) %>%
+        dplyr::mutate_at("classifications", patch_taxonomy, patch_file)
 }
 
 reduce_ncbi_taxonomy <- function(taxonomy, taxa, ranks, keytaxa) {
-  dplyr::filter(taxa, !ncbi_rank %in% ranks,
-                !ncbi_name %in% keytaxa) %$%
+  dplyr::filter(
+      taxa,
+      !ncbi_rank %in% ranks,
+      !ncbi_name %in% keytaxa
+  ) %$%
   dplyr::mutate_at(taxonomy, "classifications",
                    stringi::stri_replace_all_fixed,
                    pattern = paste0(ncbi_name, ";"),
@@ -193,16 +200,16 @@ translate_taxonomy <- function(taxonomy, c12n, reference, change_file) {
     c12n <- c12n %>%
         dplyr::mutate(n_supertaxa = stringr::str_count(classifications, ";")) %>%
         dplyr::group_split(n_supertaxa)
-  
-  for (i in seq_along(c12n)) {
-    flog.info("Translating %i taxa at level %i.", nrow(c12n[[i]]), i)
-    replacements <- c12n[[i]] %>%
-      dplyr::select(taxon_names, classifications) %>%
-      dplyr::inner_join(reference, by = "taxon_names",
-                        suffix = c("_src", "_ref")) %>%
-      dplyr::group_by(classifications_src) %>%
-      dplyr::mutate(mismatch = all(classifications_src != classifications_ref)) %>%
-      dplyr::filter(mismatch) %>%
+
+    for (i in seq_along(c12n)) {
+        flog.info("Translating %i taxa at level %i.", nrow(c12n[[i]]), i)
+        replacements <- c12n[[i]] %>%
+            dplyr::select(taxon_names, classifications) %>%
+            dplyr::inner_join(reference, by = "taxon_names",
+                              suffix = c("_src", "_ref")) %>%
+            dplyr::group_by(classifications_src) %>%
+            dplyr::mutate(mismatch = all(classifications_src != classifications_ref)) %>%
+            dplyr::filter(mismatch) %>%
             dplyr::mutate(
                 dist = stringdist::stringdist(
                     classifications_src,
@@ -244,20 +251,20 @@ translate_taxonomy <- function(taxonomy, c12n, reference, change_file) {
             taxonomy$classifications <-
                 stringi::stri_replace_all_regex(taxonomy$classifications,
                                                 replacements$classifications_src,
-                                        replacements$classifications_ref,
-                                        vectorize_all = FALSE)
-      for (j in seq_along(c12n)) {
-        if (j < i) next
-        c12n[[j]]$classifications <-
-          stringi::stri_replace_all_regex(c12n[[j]]$classifications,
-                                          replacements$classifications_src,
-                                          replacements$classifications_ref,
-                                          vectorize_all = FALSE)
-      }
+                                                replacements$classifications_ref,
+                                                vectorize_all = FALSE)
+            for (j in seq_along(c12n)) {
+                if (j < i) next
+                c12n[[j]]$classifications <-
+                    stringi::stri_replace_all_regex(c12n[[j]]$classifications,
+                                                    replacements$classifications_src,
+                                                    replacements$classifications_ref,
+                                                    vectorize_all = FALSE)
+            }
+        }
     }
-  }
-  flog.info("Uniquifying taxonomy.")
-  uniquify_taxonomy(taxonomy, dplyr::bind_rows(c12n))
+    flog.info("Uniquifying taxonomy.")
+    uniquify_taxonomy(taxonomy, dplyr::bind_rows(c12n))
 }
 
 uniquify_taxonomy <- function(taxonomy, c12n) {
@@ -289,7 +296,7 @@ uniquify_taxonomy <- function(taxonomy, c12n) {
   } else {
     taxonomy
   }
-  
+
 }
 
 # Apply a patch file (in sed regular expression format) to classification strings
@@ -299,7 +306,7 @@ patch_taxonomy <- function(taxonomy, patch_file) {
                            && file.exists(patch_file))
                           || is.null(patch_file))
   if (is.null(patch_file)) return(taxonomy)
-  
+
   replace <- readLines(patch_file) %>%
     stringr::str_subset("^s/") %>%
     stringr::str_match("s/(.+)/(.+)/g?")
@@ -398,19 +405,19 @@ read_classification_tedersoo <- function(file, patch_file = NULL) {
     # )
     dplyr::mutate_all(dplyr::na_if, "unspecified") %>%
     dplyr::mutate(
-      kingdom = dplyr::coalesce(kingdom, 
+      kingdom = dplyr::coalesce(kingdom,
                                 "Eukaryota_reg_Incertae_sedis"),
-      subkingdom = dplyr::coalesce(subkingdom, 
+      subkingdom = dplyr::coalesce(subkingdom,
                                    paste0(kingdom, "_subreg_Incertae_sedis")),
-      phylum = dplyr::coalesce(phylum, 
+      phylum = dplyr::coalesce(phylum,
                                paste0(subkingdom, "_phy_Incertae_sedis")),
-      subphylum = dplyr::coalesce(subphylum, 
+      subphylum = dplyr::coalesce(subphylum,
                                   paste0(phylum, "_subphy_Incertae_sedis")),
-      class = dplyr::coalesce(class, 
+      class = dplyr::coalesce(class,
                               paste0(subphylum, "_cl_Incertae_sedis")),
-      order = dplyr::coalesce(order, 
+      order = dplyr::coalesce(order,
                               paste0(class, "_ord_Incertae_sedis")),
-      family = dplyr::coalesce(family, 
+      family = dplyr::coalesce(family,
                                paste0(order, "_fam_Incertae_sedis"))
     ) %>%
     dplyr::mutate_all(sub,
@@ -432,6 +439,6 @@ read_classification_tedersoo <- function(file, patch_file = NULL) {
     taxa::get_data_frame(c("taxon_names", "classifications")) %>%
     dplyr::filter(!stringr::str_detect(taxon_names, "[Ii]ncertae[_ ]sedis")) %>%
     dplyr::mutate_at("classifications", patch_taxonomy, patch_file = patch_file)
-  
+
 }
 
