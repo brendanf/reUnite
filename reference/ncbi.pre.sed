@@ -15,3 +15,4 @@ s/Polypodiopsida;Polypodiidae/Polypodiopsida/
 # Matching Unite
 s/Stramenopiles/Stramenopila/
 s/Bacillariophyta/Bacillariophyceae/
+s/Aphelidea/Fungi;Aphelidiomycota/

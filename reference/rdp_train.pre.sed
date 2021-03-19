@@ -76,3 +76,11 @@ s/Eukaryota incertae sedis;Stramenopiles;Dictyochophyceae/Stramenopila;Ochrophyt
 
 # Not a taxon
 s/Spizellomycetales incertae sedis;Spizellomycete/Spizellomycetales incertae sedis;Spizellomycetales incertae sedis/
+
+# Attine ant cultivars are, annoyingly, listed as the genus of their ant, not the fungus.
+# Classification is a bit unclear in Leucocoprinus/Leucoagaricus
+# Choose Leucocoprinus as the most likely option
+s/Agaricaceae;(Atta|(Cypho|Serico|Trachy)myrmex|Mycet(arotes|ophylax|osoritis)|Mycocepurus|Myrmicocrypta)/Agaricaceae;Leucocoprinus/
+
+# Higher taxa matching different genera
+s/Gastropoda;Euthyneura/Gastropoda/

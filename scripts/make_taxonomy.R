@@ -142,19 +142,19 @@ plan <- drake_plan(
       purrr::map_dfr(
           list(rdp_nf_taxdata),
           accno_c12n_table,
-          patch_file = file_in("references/ncbi.pre.sed")
+          patch_file = file_in(!!file.path(ref_dir, "ncbi.pre.sed"))
       ),
       transform = combine(rdp_nf_taxdata)
     ),
 
   rdp_seb_ncbiheader = accno_c12n_table(
       rdp_seb_taxdata,
-      patch_file = file_in("references/ncbi.pre.sed")
+      patch_file = file_in(!!file.path(ref_dir, "ncbi.pre.sed"))
   ),
 
   rdp_lac_ncbiheader = accno_c12n_table(
       rdp_lac_taxdata,
-      patch_file = file_in("references/ncbi.pre.sed")
+      patch_file = file_in(!!file.path(ref_dir, "ncbi.pre.sed"))
   ),
 
   unite_prot_ncbiheader =
@@ -162,7 +162,7 @@ plan <- drake_plan(
       purrr::map_dfr(
           list(unite_prot_taxdata),
           accno_c12n_table,
-          patch_file = file_in("references/ncbi.pre.sed")
+          patch_file = file_in(!!file.path(ref_dir, "ncbi.pre.sed"))
       ),
       transform = combine(unite_prot_taxdata)
     ),
