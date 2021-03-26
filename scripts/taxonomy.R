@@ -82,7 +82,9 @@ read_header_silva <- function(header_file, patch_file) {
         ) %>%
         dplyr::mutate(
             classifications = classifications %>%
-                stringr::str_remove_all(";[^;]*(uncultured|unknown|unidentified|[Ii]ncertae[_ ][Ss]edis)[^;]*"),
+                stringr::str_remove_all(";[^;]*(uncultured|unknown|unidentified|[Ii]ncertae[_ ][Ss]edis)[^;]*") %>%
+                # until better logic can be used, never trust a species name from Silva
+                stringr::str_remove(";[^;]+ [^;]+$"),
             index = seq.int(dplyr::n())
         )
 }
