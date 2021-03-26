@@ -107,7 +107,7 @@ write_taxonomy_dada2 <- function(taxonomy, fasta, outfile) {
 
     taxonomy %>%
         dplyr::filter(!is.na(classifications)) %$%
-        set_names(fasta, classifications) %>%
+        set_names(fasta, truncate_taxonomy(classifications)) %>%
         Biostrings::writeXStringSet(outfile, compress = endsWith(outfile, ".gz"))
 }
 
@@ -122,7 +122,7 @@ write_taxonomy_sintax <- function(taxonomy, fasta, outfile) {
         dplyr::mutate_at("classifications", stringr::str_replace,
                          "([^;]+);([^;]+);([^;]+);([^;]+);([^;]+);([^;]+)",
                          "tax=k:\\1,p:\\2,c:\\3,o:\\4,f:\\5,g:\\6") %$%
-        set_names(fasta, classifications) %>%
+        set_names(fasta, truncate_taxonomy(classifications)) %>%
         Biostrings::writeXStringSet(outfile, compress = endsWith(outfile, ".gz"))
 }
 
@@ -378,6 +378,15 @@ regularize_taxonomy <- function(taxonomy, rank_in,
                       "(unidentified_)+",
                       "unidentified_") %>%
     purrr::pmap_chr(paste, sep = ";")
+}
+
+# remove all trailing Incertae sedis/unidentified chains
+# dada2 and sintax can both deal with incomplete taxonomies
+truncate_taxonomy <- function(taxonomy) {
+    stringr::str_remove(
+        taxonomy,
+        "(;[^;]+_Incertae_sedis|;unidentified_[^;]+)*;unidentified_[^;]+$"
+    )
 }
 
 read_classification_tedersoo <- function(file, patch_file = NULL) {
