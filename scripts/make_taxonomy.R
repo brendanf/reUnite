@@ -312,7 +312,8 @@ plan <- drake_plan(
                        tedersoo_class,
                        file_out(!!file.path(out_dir, paste0(db, ".changes2")))) %>%
     dplyr::mutate_at("classifications", regularize_taxonomy,
-                     rank_in = tedersoo_ranks),
+                     rank_in = tedersoo_ranks) %>%
+        dplyr::mutate_at("classifications", taxonomy_to_na),
     transform = map(class, .id = db)
   ),
 

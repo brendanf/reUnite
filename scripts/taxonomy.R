@@ -389,6 +389,12 @@ truncate_taxonomy <- function(taxonomy) {
     )
 }
 
+# remove completely unknown taxa from the taxonomy
+taxonomy_to_na <- function(taxonomy, na_pattern = "^NA;") {
+    taxonomy[stringr::str_detect(taxonomy, na_pattern)] <- NA_character_
+    taxonomy
+}
+
 read_classification_tedersoo <- function(file, patch_file = NULL) {
     readxl::read_xlsx(file) %>%
     dplyr::select(-subdomain) %>%
