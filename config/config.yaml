@@ -43,6 +43,7 @@ warcup_idtaxa_md5: 'b4764f0ff5e865841f8899ae5ef382a0'
 
 tedersoo_url: 'https://files.plutof.ut.ee/doi/9B/D1/9BD15803C666B4B67BDF20DE0C6002CAEE04BE58EB744003CE4EB8AAED26C1C5.xlsx'
 tedersoo_md5: '8993c02e333ced1d1a9e9d724338da1d'
+tedersoo_add: 'reference/tedersoo_additions.xlsx'
 tedersoo_patch: 'reference/tedersoo.pre.sed'
 
 genbank_accno2tax_url: 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz'

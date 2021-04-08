@@ -395,8 +395,12 @@ taxonomy_to_na <- function(taxonomy, na_pattern = "^NA;") {
     taxonomy
 }
 
-read_classification_tedersoo <- function(file, patch_file = NULL) {
-    readxl::read_xlsx(file) %>%
+read_classification_tedersoo <- function(file, add_file = NULL, patch_file = NULL) {
+  tedersoo <- readxl::read_xlsx(file)
+  if (!is.null(add_file)) {
+    tedersoo <- dplyr::bind_rows(tedersoo, readxl::read_xlsx(add_file))
+  }
+    tedersoo %>%
     dplyr::select(-subdomain) %>%
     # Remove duplicate taxa within one kingdom
     # Unless noted otherwise the choice of which to remove is based on

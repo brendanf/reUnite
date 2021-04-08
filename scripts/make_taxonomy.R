@@ -12,6 +12,7 @@ if (interactive()) {
   ref_dir <- "reference"
   out_dir <- "output"
   tedersoo_file <- file.path(ref_dir, "Tedersoo_Eukarya_classification.xlsx")
+  tedersoo_add_file <- file.path(ref_dir, "tedersoo_additions.xlsx")
   tedersoo_patch_file <- file.path(ref_dir, "tedersoo.pre.sed")
   regions_file <- file.path(config_dir, "regions.csv")
 } else if (exists("snakemake")) {
@@ -20,6 +21,7 @@ if (interactive()) {
   ref_dir <- snakemake@config$refdir
   out_dir <- snakemake@config$outdir
   tedersoo_file <- snakemake@input$tedersoo
+  tedersoo_add_file <- snakemake@input$tedersoo_add
   tedersoo_patch_file <- snakemake@input$tedersoo_patch
   regions_file <- snakemake@input$regions
   outputs <- snakemake@output
@@ -189,7 +191,11 @@ plan <- drake_plan(
 
   # Parse Tedersoo's classification
   tedersoo_class =
-    read_classification_tedersoo(file_in(!!tedersoo_file), file_in(!!tedersoo_patch_file)),
+    read_classification_tedersoo(
+      file_in(!!tedersoo_file),
+      file_in(!!tedersoo_add_file),
+      file_in(!!tedersoo_patch_file)
+    ),
 
   # Remove taxa at unnecessary ranks.
   rdp_nf_reduced =

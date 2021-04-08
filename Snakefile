@@ -42,6 +42,7 @@ rule translate_references:
     "{rdir}/taxonomy.R".format_map(config),
     regions = config["regions_file"],
     tedersoo = "{refdir}/Tedersoo_Eukarya_classification.xlsx".format_map(config),
+    tedersoo_add = config['tedersoo_add'],
     tedersoo_patch = config['tedersoo_patch'],
     script = "{rdir}/make_taxonomy.R".format_map(config)
   resources:
