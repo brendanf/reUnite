@@ -9,3 +9,5 @@ reference/Tedersoo_Eukarya_classification.xlsx
 .Rproj.user
 .Rhistory
 reannotate.Rproj
+.~lock.*#
+.idea
