@@ -48,51 +48,53 @@ rule translate_references:
     walltime = 60
   conda: "{condadir}/drake.yaml".format_map(config)
   log: "{logdir}/translate_references.log".format_map(config)
-  script: "{rdir}/make_taxonomy.R".format_map(config)    
+  script: "{rdir}/make_taxonomy.R".format_map(config)
+
+def unite_url(wildcards) :
+    return config['unite_{which}_url'.format(which = wildcards.which)]
+def unite_md5(wildcards) :
+    return config['unite_{which}_md5'.format(which = wildcards.which)]
+def unite_basename(wildcards) :
+    return os.path.basename(unite_url(wildcards))
+def unite_filename(wildcards) :
+    return config['unite_{which}_filename'.format(which = wildcards.which)]
 
 # Download the Unite database, without global and 97% singletons
 localrules: unite_download
 rule unite_download:
-    output: "{refdir}/unite_nosingle.fasta.gz".format_map(config)
-    input:
-      zip = HTTP.remote(config['unite_nosingle_url'], allow_redirects = True, keep_local = False)
+    output: "{refdir}/unite_{{which}}.fasta.gz".format_map(config)
+    wildcard_constraints:
+      which = "(no)?single"
+    params:
+      url = unite_url,
+      zipfile = unite_basename,
+      md5 = unite_md5,
+      fasta = unite_filename
     shadow: "shallow"
     shell:
         """
-        echo {config[unite_nosingle_md5]} {input} |
-        md5sum -c - &&
-        mkdir -p $(dirname {output}) &&
-        tar -xzf {input} &&
-        gzip -c9 {config[unite_nosingle_filename]} > {output}
-        """
-
-# Download the Unite database, including global and 97% singletons
-localrules: unite_single_download
-rule unite_single_download:
-    output: "{refdir}/unite_single.fasta.gz".format_map(config)
-    input:
-      zip = HTTP.remote(config['unite_single_url'], allow_redirects = True, keep_local = False)
-    shadow: "shallow"
-    shell:
-        """
-        echo {config[unite_single_md5]} {input} |
-        md5sum -c - &&
-        mkdir -p $(dirname {output}) &&
-        tar -xzf {input} &&
-        gzip -c9 {config[unite_single_filename]} > {output}
+        wget {params.url}
+        echo {params.md5} {params.zipfile} | md5sum -c -
+        mkdir -p $(dirname {output})
+        tar -xzf {params.zipfile} {params.fasta}
+        gzip -c9 {params.fasta} > {output}
         """
 
 # Download the Unite+INSD database
 localrules: unite_insd_download
 rule unite_insd_download:
     output: "{refdir}/unite_insd.fasta.gz".format_map(config)
-    input: HTTP.remote(config['unite_insd_url'], allow_redirects = True, keep_local = False)
+    params:
+        url = config['unite_insd_url'],
+        md5 = config['unite_insd_md5'],
+        fasta = os.path.basename(config['unite_insd_url'])
     shadow: "shallow"
     shell:
         """
-        echo {config[unite_single_md5]} {input} | md5sum -c -
+        wget {params.url}
+        echo {params.md5} {params.fasta} | md5sum -c -
         mkdir -p $(dirname {output})
-        mv {input} {output}
+        mv {params.fasta} {output}
         """
 
 # Download the RDP fungal LSU training set
@@ -102,18 +104,21 @@ rule rdp_download:
     output:
         fasta = "{refdir}/rdp_train.fasta.gz".format_map(config),
         taxa  = "{refdir}/rdp_train.taxa.txt".format_map(config)
-    input:
-      zip = HTTP.remote(config['rdp_url'], allow_redirects = True, keep_local = True)
+    params:
+        url = config['rdp_url'],
+        md5 = config['rdp_md5'],
+        zipfile = os.path.basename(config['rdp_url']),
+        fasta = config['rdp_filename'],
+        taxa = config['rdp_taxa']
     shadow: "shallow"
     shell:
         """
-        echo {config[rdp_md5]} {input.zip} |
-        md5sum -c - &&
-        mkdir -p $(dirname {output.fasta}) &&
-        unzip {input.zip} &&
-        sed '/^>/!y/uU/tT/' <{config[rdp_filename]} |
-        gzip -c9 > {output.fasta} &&
-        mv {config[rdp_taxa]} {output.taxa}
+        wget {params.url}
+        echo {params.md5} {params.zipfile} | md5sum -c -
+        mkdir -p $(dirname {output.fasta})
+        unzip {params.zipfile} {params.fasta} {params.taxa}
+        sed '/^>/!y/uU/tT/' <{params.fasta} | gzip -c9 > {output.fasta}
+        mv {params.taxa} {output.taxa}
         """
 
 # Download the RDP fungal LSU database
@@ -122,18 +127,22 @@ localrules: rdp_full_download
 rule rdp_full_download:
     output:
         fasta = "{refdir}/rdp_28S.fasta.gz".format_map(config)
-    input:
-        fasta = HTTP.remote(config['rdp_full_url'], allow_redirects = True, keep_local = True)
+    params:
+        url = config['rdp_full_url'],
+        fasta = os.path.basename(config['rdp_full_url']),
+        md5 = config['rdp_full_md5']
     shadow: "shallow"
     shell:
         """
-        echo {config[rdp_full_md5]} {input.fasta} |
-        md5sum -c - &&
-        mkdir -p $(dirname {output.fasta}) &&
-        zcat {input.fasta} |
-        sed '/^>/!y/uU/tT/' |
-        gzip -c >{output.fasta}
+        wget {params.url}
+        echo {params.md5} {params.fasta} | md5sum -c -
+        mkdir -p $(dirname {output.fasta})
+        zcat {params.fasta} |
+         sed '/^>/!y/uU/tT/' |
+          gzip -c9 >{output.fasta}
         """
+
+
 
 # Download the Warcup fungal ITS training set
 localrules: warcup_download
@@ -141,50 +150,68 @@ rule warcup_download:
     output:
         fasta = "{refdir}/warcup.fasta.gz".format_map(config),
         taxa  = "{refdir}/warcup.taxa.txt".format_map(config)
-    input:
-      zip = HTTP.remote(config['warcup_url'], allow_redirects = True, keep_local = True)
+    params:
+      url = config['warcup_url'],
+      basename = os.path.basename(config['warcup_url']),
+      md5 = config['warcup_md5'],
+      filename = config['warcup_filename'],
+      taxa = config['warcup_taxa']
     shadow: "shallow"
     shell:
         """
-        echo {config[warcup_md5]} {input} |
-        md5sum -c - &&
-        mkdir -p $(dirname {output.fasta}) &&
-        unzip {input} &&
-        gzip -c {config[warcup_filename]} > {output.fasta} &&
-        mv {config[warcup_taxa]} {output.taxa}
+        wget {params.url}
+        echo {params.md5} {params.basename} | md5sum -c -
+        mkdir -p $(dirname {output.fasta})
+        unzip {params.basename} {params.filename} {params.taxa}
+        gzip -c9 {params.filename} > {output.fasta}
+        mv {params.taxa} {output.taxa}
         """
 
-# Download SILVA LSURef NR99
+def silva_url(wildcards) :
+    return config['silva_{which}_url'.format(which = wildcards.which)]
+def silva_md5(wildcards) :
+    return config['silva_{which}_md5'.format(which = wildcards.which)]
+def silva_basename(wildcards) :
+    return os.path.basename(silva_url(wildcards))
+
+# Download SILVA
 # also extract Eukaryotes only, and transcribe RNA to DNA
 rule silva_download:
     output:
-        fasta = "{refdir}/silva.fasta.gz".format_map(config)
-    input:
-        HTTP.remote(config['silva_ref99_url'], allow_redirects = True, keep_local = True)
+        fasta = "{refdir}/silva_{{which}}.fasta.gz".format_map(config)
+    params:
+        url = silva_url,
+        md5 = silva_md5,
+        basename = silva_basename
+    wildcard_constraints:
+        which = "(parc|ref|nr99)"
     shadow: "shallow"
     conda: "config/vsearch.yaml"
     shell:
         """
-        echo {config[silva_ref99_md5]} {input} |
-        md5sum -c - &&
-        mkdir -p $(dirname {output.fasta}) &&
-        zcat {input} |
-        tr ' ' '$' |
-        vsearch --fastx_getseqs - --label_word Eukaryota --fastaout - |
-        tr '$' ' ' |
-        sed '/^>/!y/Uu/Tt/' |
-        gzip -c >{output.fasta}
+        wget {params.url}
+        echo {params.md5} {params.basename} | md5sum -c -
+        mkdir -p $(dirname {output.fasta})
+        zcat {params.basename} |
+         tr ' ' '$' |
+         vsearch --fastx_getseqs - --label_word Eukaryota --fastaout - |
+         tr '$' ' ' |
+         sed '/^>/!y/Uu/Tt/' |
+         gzip -c >{output.fasta}
         """
 
 # Download Eukarya classification system proposed by Tedersoo
 localrules: tedersoo_classification
 rule tedersoo_classification:
     output: "{refdir}/Tedersoo_Eukarya_classification.xlsx".format_map(config)
-    input: HTTP.remote(config['tedersoo_url'], allow_redirects = True)
+    params:
+        url = config['tedersoo_url'],
+        filename = os.path.basename(config['tedersoo_url']),
+        md5 = config['tedersoo_md5']
     shadow: "shallow"
     shell:
         """
-        echo {config[tedersoo_md5]} {input} |
-        md5sum -c - &&
-        mv {input} {output}
+        wget {params.url}
+        echo {params.md5} {params.filename} | md5sum -c -
+        mv {params.filename} {output}
         """
