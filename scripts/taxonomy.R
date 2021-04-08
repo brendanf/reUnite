@@ -131,7 +131,7 @@ replace_header <- function(in_fasta, out_fasta, new_header,
                            patch_file) {
   fasta <- Biostrings::readDNAStringSet(in_fasta)
   old_header <- read_header(fasta, patch_file, in_format)
-  assertthat::assert_that(all(old_header$accno %in% new_header$accno))
+  # assertthat::assert_that(all(old_header$accno %in% new_header$accno))
   new_header <- dplyr::select(old_header, accno) %>%
     dplyr::left_join(new_header, by = "accno")
 
@@ -270,6 +270,8 @@ translate_taxonomy <- function(taxonomy, c12n, reference, change_file) {
 }
 
 uniquify_taxonomy <- function(taxonomy, c12n) {
+  c12n <- dplyr::select(c12n, taxon_names, classifications) %>%
+    unique()
   # finding duplicates is much faster than checking whether the
   # classification is present in the taxonomy, so do that first.
   taxdupes <- unique(c12n$taxon_names[duplicated(c12n$taxon_names)])

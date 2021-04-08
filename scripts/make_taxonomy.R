@@ -26,7 +26,7 @@ if (interactive()) {
   regions_file <- snakemake@input$regions
   outputs <- snakemake@output
   logfile <- file(snakemake@log[[1]], open = "at")
-  sink(logfile)
+  sink(logfile, type = "output", split = TRUE)
   sink(logfile, type = "message")
 } else {
   flog.error("Can't find Snakemake object in non-interactive session!")
@@ -47,13 +47,16 @@ tedersoo_ranks <- c("kingdom", "subkingdom", "phylum", "subphylum", "class",
                     "order", "family", "genus")
 
 # The reference DBs and which format their headers use.
-dbs <- tibble::tribble(        ~db, ~header_format,
-                       "rdp_train",          "rdp",
-                          "warcup",          "rdp",
-                           "unite",        "unite",
-                           "silva",        "silva") %>%
+dbs <- readr::read_csv(file.path("config", "remotes.csv")) %>%
   dplyr::mutate(header_file = file.path("reference", paste0(db, ".fasta.gz")),
                 patch_file = file.path("reference", paste0(db, ".pre.sed")))
+
+db_meta <- dbs %>%
+  dplyr::mutate(
+    raw_header = rlang::syms(paste0("raw_header_", db)),
+    sub_db = stringr::str_remove(db, paste0("^", header_format, "_"))
+  ) %>%
+  split.data.frame(.$header_format)
 
 # Which regions each DB is applicable to
 regions = readr::read_csv(regions_file, col_types = "cc") %>%
@@ -99,7 +102,9 @@ plan <- drake_plan(
     unique(),
 
   unite_prot_accno =
-    dplyr::filter(raw_header_unite, startsWith(classifications, "Protista")) %$%
+    dplyr::bind_rows(raw_header_unite_single, raw_header_unite_nosingle) %>%
+    dplyr::filter(startsWith(classifications, "Protista"),
+                  !startsWith(accno, "UDB")) %$%
     accno %>%
     unique(),
 
@@ -281,7 +286,7 @@ plan <- drake_plan(
           reduce_taxonomy()
       ) %>%
       dplyr::select(-c_prot),
-    transform = map(raw_header = raw_header_unite, db = "unite", .tag_out = reduced_header, .id = FALSE)
+    transform = map(.data = !!db_meta$unite, .tag_out = reduced_header, .id = sub_db)
   ),
 
   reduced_header_warcup = target(
@@ -299,7 +304,7 @@ plan <- drake_plan(
           dplyr::mutate(
               classifications = reduce_taxonomy(classifications)
           ),
-      transform = map(raw_header = raw_header_silva, db = "silva", .tag_out = reduced_header, .id = FALSE)
+      transform = map(.data = !!db_meta$silva, .tag_out = reduced_header, .id = sub_db)
   ),
 
   # parse classification from the headers

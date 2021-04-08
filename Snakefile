@@ -26,18 +26,19 @@ rule translate_references:
   output:
         expand("{outdir}/{db}.{region}.{method}.fasta.gz",
                outdir = config['outdir'],
-               db = ['warcup', 'unite'],
+               db = ['warcup', 'unite_single', 'unite_nosingle'],
                region = ['ITS'],
                method = ['sintax', 'dada2']),
         expand("{outdir}/{db}.{region}.{method}.fasta.gz",
                outdir = config['outdir'],
-               db = ['rdp_train', 'silva'],
+               db = ['rdp_train', 'silva_parc', 'silva_ref', 'silva_nr99'],
                region = ['LSU'],
                method = ['sintax', 'dada2'])
   input:
     expand("{refdir}/{dbname}.{type}",
            refdir = config['refdir'],
-           dbname = ['rdp_train', 'warcup', 'unite', 'silva'],
+           dbname = ['rdp_train', 'warcup', 'unite_single', 'unite_nosingle',
+               'silva_parc', 'silva_ref', 'silva_nr99'],
            type = ['fasta.gz', 'pre.sed']),
     "{rdir}/taxonomy.R".format_map(config),
     regions = config["regions_file"],
