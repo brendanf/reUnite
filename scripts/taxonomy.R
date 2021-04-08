@@ -385,7 +385,7 @@ regularize_taxonomy <- function(taxonomy, rank_in,
 truncate_taxonomy <- function(taxonomy) {
     stringr::str_remove(
         taxonomy,
-        "(;[^;]+_Incertae_sedis|;unidentified_[^;]+)*;unidentified_[^;]+$"
+        "([;,][^;,]+_Incertae_sedis|[;,]([kpcofg]:)?unidentified_[^;,]+)*[;,](g:)?unidentified_[^;,]+$"
     )
 }
 
