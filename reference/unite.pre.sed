@@ -109,3 +109,6 @@ s/Aphelidea/Fungi;Aphelidiomycota/
 s/Monocotyledonae/Angiospermae/
 s/Eudicotyledonae/Angiospermae/
 
+# per Index Fungorum
+s/Helotiaceae;Coryne/Helotiaceae;Ascocoryne/
+
