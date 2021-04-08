@@ -31,8 +31,8 @@ silva_parc_url: 'https://www.arb-silva.de/fileadmin/silva_databases/release_138.
 silva_parc_md5: '626d9d94661730bac0717f3e3e838b09'
 silva_ref_url: 'https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/SILVA_138.1_LSURef_tax_silva_trunc.fasta.gz'
 silva_ref_md5: '7bcbf0e0e131ac66293e469b34f64da8'
-silva_ref99_url: 'https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/SILVA_138.1_LSURef_NR99_tax_silva_trunc.fasta.gz'
-silva_ref99_md5: '7eab5ef858cd0ef51e59d0550f4123da'
+silva_nr99_url: 'https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/SILVA_138.1_LSURef_NR99_tax_silva_trunc.fasta.gz'
+silva_nr99_md5: '7eab5ef858cd0ef51e59d0550f4123da'
 
 warcup_url: 'https://sourceforge.net/projects/rdp-classifier/files/RDP_Classifier_TrainingData/fungalits_warcup_trainingdata_V2.zip'
 warcup_md5: 'd6fb59a81aa885937054abc334fb60d2'
