@@ -7,7 +7,7 @@ logdir:   'logs'
 regions_file: 'config/regions.csv'
 
 unite_single_url: 'https://files.plutof.ut.ee/public/orig/1D/B9/1DB95C8AC0A80108BECAF1162D761A8D379AF43E2A4295A3EF353DD1632B645B.gz'
-unite_single_md5: '9d41e1212beec5eea320c99911qls f4217f'
+unite_single_md5: '9d41e1212beec5eea320c99911f4217f'
 unite_single_filename: 'sh_general_release_s_all_04.02.2020/sh_general_release_dynamic_s_all_04.02.2020.fasta'
 unite_nosingle_url: 'https://files.plutof.ut.ee/public/orig/F9/ED/F9EDE36E5209F469056675EBD672425BC06EACB7FE0C0D18F5A13E4CA632DCFA.gz'
 unite_nosingle_md5: '9de96415dee5c5f0041b07d382e6743f'
