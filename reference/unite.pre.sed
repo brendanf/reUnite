@@ -104,7 +104,7 @@ s/Hypoceales/Hypocreales/g
 # Recognized as a class instead of phylum in Tedersoo
 s/Bacillariophyta/Bacillariophyceae/g
 # Recognized inside fungi
-s/Aphelidea/Fungi;Apelidiomycota/
+s/Aphelidea/Fungi;Aphelidiomycota/
 # Tedersoo doesn't go into this much detail
 s/Monocotyledonae/Angiospermae/
 s/Eudicotyledonae/Angiospermae/
