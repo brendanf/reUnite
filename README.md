@@ -1,4 +1,4 @@
-# Reannotate
+# ReUnite
 #### Reannotated RDP, Silva, and Unite databases to use uniform taxonomic classifications.
 
 The current version includes the following data sets:
