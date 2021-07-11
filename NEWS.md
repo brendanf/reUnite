@@ -1,5 +1,6 @@
-# reannotate development version
+# reUnite v0.2
 
+* Change project name to the more descriptive "reUnite"
 * Add Silva LSU data sets (Parc, Ref, and Ref NR99)
 * Include version of Unite with only RefS singletons ("`nosingle`"), as well as
   with all singletons ("`single`").
